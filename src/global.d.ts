@@ -8,6 +8,7 @@ declare type PaginatedResponseData<D> = {
 declare type RecordCondition = "poor" | "fair" | "good" | "very_good" | "mint"
 
 declare type RecordData = {
+  id: string | number
   album_title: string
   year: number
   condition: RecordCondition

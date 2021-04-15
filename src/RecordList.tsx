@@ -1,6 +1,6 @@
 import React from "react"
 import { Grid, Card, CardBody, CardFooter, Text, CardHeader, Box } from "grommet"
-import { useQueryRecords } from "./hooks/useQueryRecords"
+import { useQueryRecords } from "./hooks/queries"
 
 export const RecordList = React.memo(() => {
   const [{ data: records }] = useQueryRecords()

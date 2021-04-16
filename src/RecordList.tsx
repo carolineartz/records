@@ -1,10 +1,10 @@
 import React from "react"
-import { Grid, ResponsiveContext } from "grommet"
+import { Grid } from "grommet"
 import { useReleasesQuery } from "./hooks/queries"
 
 import { RecordListItem } from "./RecordItem/RecordListItem"
 
-export const RecordList = React.memo(() => {
+export const RecordList = () => {
   const [{ data: recordReleases }] = useReleasesQuery()
 
   return (
@@ -14,4 +14,4 @@ export const RecordList = React.memo(() => {
       ))}
     </Grid>
   )
-})
+}

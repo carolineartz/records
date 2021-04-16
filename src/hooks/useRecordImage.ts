@@ -3,13 +3,20 @@ import { createStorageSerializer } from "../helpers/persistStorageHelper"
 
 const AlbumArtSourceStore = createStorageSerializer<Record<string, string>>("my-records_art")
 
-export const useRecordImage = ({ artistName, albumName }: { artistName: string; albumName: string }) => {
+type UseRecordImageParams = {
+  artistName?: string
+  albumName?: string
+}
+
+export const useRecordImage = ({ artistName, albumName }: UseRecordImageParams) => {
   const key = React.useMemo(() => `${artistName}-${albumName}`, [albumName, artistName])
 
   const [imageUrl, setImageUrl] = React.useState<null | string>(null)
 
   React.useEffect(() => {
     const getImage = async () => {
+      if (!artistName || !albumName) return
+
       try {
         let storedDataMap = (await AlbumArtSourceStore.load()) || {}
 
@@ -36,8 +43,7 @@ export const useRecordImage = ({ artistName, albumName }: { artistName: string; 
     }
 
     getImage()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [albumName, artistName, key])
 
   return imageUrl
 }

@@ -1,27 +1,12 @@
-import { Box, Grommet, grommet } from "grommet"
-import { deepMerge } from "grommet/utils"
-// import { useQueryClient } from "react-query"
+import { Box, Grommet } from "grommet"
 import { RecordList } from "./RecordList"
-
-const theme = deepMerge(grommet, {
-  global: {
-    colors: {
-      brand: "#80127C",
-    },
-    font: {
-      family: "Poppins, sans-serif",
-      size: "14px",
-      height: "20px",
-    },
-  },
-})
+import { GlobalStyles } from "./globalStyles"
+import { theme } from "./theme"
 
 const App = () => {
-  // const queryClient = useQueryClient()
-  // queryClient.clear()
-  console.log("hi")
   return (
     <Grommet theme={theme} full>
+      <GlobalStyles />
       <Box fill pad="medium">
         <RecordList />
       </Box>

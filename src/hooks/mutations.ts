@@ -53,12 +53,12 @@ export type UseRecordMutationReturnType = ReturnType<typeof useRecordMutation>
 const useArtistMutation = () => {
   const queryClient = useQueryClient()
 
-  const updateRecord = (params: { id: string | number } & Partial<Pick<ArtistData, "name">>) =>
+  const updateArtist = (params: { id: string | number } & Partial<Pick<ArtistData, "name">>) =>
     updateFromCache<ArtistData>({ keyBase: "artists", params, queryClient })
 
-  return useMutation(updateRecord, {
+  return useMutation(updateArtist, {
     onSuccess: () => {
-      queryClient.refetchQueries(["artists"], { exact: true })
+      queryClient.refetchQueries(["artists"])
     },
   })
 }

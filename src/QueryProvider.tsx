@@ -25,8 +25,9 @@ const setupClient = (client: QueryClient) => {
 
   client.setMutationDefaults("updateArtist", {
     mutationFn: createUpdateArtist(client),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       client.setQueryData(["artists", data.id], data)
+      // await queryClient.refetchQueries([["records"], ["artists", data.id]])
     },
   })
 }

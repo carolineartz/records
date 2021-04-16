@@ -1,34 +1,23 @@
 import { QueryClient, useQueryClient, useMutation } from "react-query"
 
-export const useRecordMutation = () => {
-  const queryClient = useQueryClient()
+export const createUpdateRecord = (queryClient: QueryClient) => (
+  params: { id: string | number } & Partial<Pick<RecordData, "album_title" | "year" | "condition">>
+) => updateFromCache({ keyBase: "records", params, queryClient })
 
-  const updateRecord = (
-    params: { id: string } & Partial<Pick<RecordData, "album_title" | "year" | "condition">>
-  ) => updateFromCache("records", params, queryClient)
+export const createUpdateArtist = (queryClient: QueryClient) => (
+  params: { id: string | number } & Partial<Pick<ArtistData, "name">>
+) => updateFromCache<ArtistData>({ keyBase: "artists", params, queryClient })
 
-  return useMutation(updateRecord)
-}
-
-export const useArtistMutation = () => {
-  const queryClient = useQueryClient()
-
-  const updateRecord = (params: { id: string } & Partial<Pick<ArtistData, "name">>) =>
-    updateFromCache<ArtistData>("artists", params, queryClient)
-
-  return useMutation(updateRecord)
-}
-
-/////////////////////////////////////////////////
-
-async function updateFromCache<T extends { id: string | number }>(
-  keyBase: string,
-  params: { id: string | number } & Partial<T>,
+async function updateFromCache<T extends { id: string | number }>({
+  keyBase,
+  params,
+  queryClient,
+}: {
+  keyBase: string
+  params: { id: string | number } & Partial<T>
   queryClient: QueryClient
-) {
-  queryClient.cancelQueries([keyBase])
+}) {
   const currentData = queryClient.getQueryData<T>([keyBase, params.id])
-  const currentCollectionData = queryClient.getQueryData<T[]>([keyBase])
 
   if (!currentData) {
     throw new Error("No record to update")
@@ -38,10 +27,40 @@ async function updateFromCache<T extends { id: string | number }>(
     ...params,
   }
 
-  const nextCollectionData = currentCollectionData?.map((r) => (r.id === params.id ? nextData : r))
-
-  queryClient.setQueryData([keyBase, params.id], nextData)
-  queryClient.setQueryData([keyBase], nextCollectionData)
-
   return nextData
 }
+
+////////////////////////////////////////
+
+// currently just using for type return definitions...TODO: figure out the proper type params and remove these
+// functions
+const useRecordMutation = () => {
+  const queryClient = useQueryClient()
+
+  const updateRecord = (
+    params: { id: string | number } & Partial<Pick<RecordData, "album_title" | "year" | "condition">>
+  ) => updateFromCache({ keyBase: "records", params, queryClient })
+
+  return useMutation(updateRecord, {
+    onSuccess: () => {
+      queryClient.refetchQueries(["records"], { stale: true })
+    },
+  })
+}
+
+export type UseRecordMutationReturnType = ReturnType<typeof useRecordMutation>
+
+const useArtistMutation = () => {
+  const queryClient = useQueryClient()
+
+  const updateRecord = (params: { id: string | number } & Partial<Pick<ArtistData, "name">>) =>
+    updateFromCache<ArtistData>({ keyBase: "artists", params, queryClient })
+
+  return useMutation(updateRecord, {
+    onSuccess: () => {
+      queryClient.refetchQueries(["artists"], { exact: true })
+    },
+  })
+}
+
+export type UseArtistMutationReturnType = ReturnType<typeof useArtistMutation>

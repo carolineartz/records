@@ -1,5 +1,6 @@
 import { Box, Grommet, grommet } from "grommet"
 import { deepMerge } from "grommet/utils"
+// import { useQueryClient } from "react-query"
 import { RecordList } from "./RecordList"
 
 const theme = deepMerge(grommet, {
@@ -16,6 +17,9 @@ const theme = deepMerge(grommet, {
 })
 
 const App = () => {
+  // const queryClient = useQueryClient()
+  // queryClient.clear()
+  console.log("hi")
   return (
     <Grommet theme={theme} full>
       <Box fill pad="medium">

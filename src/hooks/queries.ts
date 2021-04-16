@@ -1,41 +1,87 @@
 import React from "react"
 import axios from "axios"
 import { QueryClient, QueryKey, useQuery, useQueryClient, UseQueryResult } from "react-query"
-import keyBy from "lodash.keyby"
+import { createStorageSerializer } from "../helpers/persistStorageHelper"
 import { v4 as uuid } from "uuid"
 
 const INITIAL_API_ENDPOINT =
   "https://gist.githubusercontent.com/seanders/df38a92ffc4e8c56962e51b6e96e188f/raw/b032669142b7b57ede3496dffee5b7c16b8071e1/page1.json"
 
-export const useQueryRecords = (): [
-  UseQueryResult<RecordData[], Error>,
+const ApiResponseStore = createStorageSerializer<
+  Record<string, PaginatedResponseData<RecordData & { artist: ArtistData }>>
+>("records_api")
+
+export const useReleasesQuery = (): [
+  UseQueryResult<RecordReleaseData[], Error>,
   { getNextPage: () => Promise<void> }
 ] => {
   const queryClient = useQueryClient()
   const [page, setPage] = React.useState(INITIAL_API_ENDPOINT)
   const [nextPage, setNextPage] = React.useState<null | string>(null)
+  const queryKey: QueryKey = React.useMemo(() => ["record-releases", { page }], [page])
 
-  const fetchRecordsFn = React.useCallback(async (page = INITIAL_API_ENDPOINT) => {
-    const resp = await axios.get<PaginatedResponseData<Omit<RecordData, "id">>>(page)
-    setNextPage(resp.data.nextPage || null)
-    return resp.data.results.map((rd) => {
-      return {
-        id: uuid(),
-        ...rd,
+  const fetchRecordsReleasesFn = React.useCallback(
+    async (page = INITIAL_API_ENDPOINT) => {
+      const storedResponses = await ApiResponseStore.load()
+      let storedResponse: (RecordData & { artist: ArtistData })[]
+      if (storedResponses?.[page]) {
+        storedResponse = storedResponses[page].results
+      } else {
+        let updatedResponse = { ...storedResponses } || {}
+        const remoteResponse = await axios.get<
+          PaginatedResponseData<Omit<RecordData, "id"> & { artist: ArtistData }>
+        >(page)
+
+        setNextPage(remoteResponse.data.nextPage || null)
+
+        const responseData = {
+          ...remoteResponse.data,
+          results: remoteResponse.data.results.map((d) => ({
+            id: uuid(),
+            ...d,
+          })),
+        }
+
+        updatedResponse[page] = responseData
+        storedResponse = responseData.results
+        await ApiResponseStore.store(updatedResponse)
       }
-    })
-  }, [])
 
-  const fetchRecords = React.useCallback(() => {
-    return fetchRecordsFn(page)
-  }, [fetchRecordsFn, page])
+      // TRY TO CONSTRUCT THE COLLECTION FROM THE STORE BEFORE MAKING ASYNC CALL
+      const existingData = queryClient.getQueryData<RecordReleaseData[]>(queryKey)
 
-  const query = useQuery<RecordData[], Error>(["records", page], fetchRecords, {
-    keepPreviousData: true,
-    onSuccess: (data) => {
-      setRecordData(data, queryClient)
-      setArtistsData(data, queryClient)
+      if (existingData) {
+        return existingData
+      } else {
+        return storedResponse.map((d) => {
+          const { artist, ...record } = d
+          const storedRecordData = queryClient.getQueryData<RecordData>(["records", record.id])
+          const storedArtistData = queryClient.getQueryData<ArtistData>(["artists", artist.id])
+
+          if (!storedRecordData) {
+            queryClient.setQueryData(["records", record.id], record)
+          }
+
+          if (!storedArtistData) {
+            queryClient.setQueryData(["artists", artist.id], artist)
+          }
+
+          return {
+            record_id: record.id,
+            artist_id: artist.id,
+          }
+        })
+      }
     },
+    [queryClient, queryKey]
+  )
+
+  const fetchRecordReleases = React.useCallback(() => {
+    return fetchRecordsReleasesFn(page)
+  }, [fetchRecordsReleasesFn, page])
+
+  const query = useQuery<RecordReleaseData[], Error>(queryKey, fetchRecordReleases, {
+    keepPreviousData: true,
   })
 
   const getNextPage = React.useCallback(async () => {
@@ -49,28 +95,20 @@ export const useQueryRecords = (): [
   return [query, { getNextPage }]
 }
 
-export const useQueryRecord = (id: string) => {
+export const useRecordQuery = (id: string | number, opts = {}) => {
   const queryClient = useQueryClient()
   const key = ["records", id]
 
   const fetchRecord = () => fetchFromCache<RecordData>(key, queryClient)
-  return useQuery<RecordData, Error>(key, fetchRecord)
+  return useQuery<RecordData, Error>(key, fetchRecord, opts)
 }
 
-export const useQueryArtists = () => {
-  const queryClient = useQueryClient()
-  const key = ["artists"]
-
-  const fetchRecords = () => fetchFromCache<ArtistData[]>(key, queryClient)
-  return useQuery<ArtistData[], Error>(key, fetchRecords)
-}
-
-export const useQueryArtist = (id: number | string) => {
+export const useArtistQuery = (id: number | string, opts = {}) => {
   const queryClient = useQueryClient()
   const key = ["artists", id]
 
   const fetchRecord = () => fetchFromCache<ArtistData>(key, queryClient)
-  return useQuery<ArtistData, Error>(key, fetchRecord)
+  return useQuery<ArtistData, Error>(key, fetchRecord, opts)
 }
 
 //////////////////////////////////////////////////////
@@ -83,32 +121,4 @@ async function fetchFromCache<T>(key: QueryKey, queryClient: QueryClient): Promi
   }
 
   return storedData
-}
-
-const setRecordData = (data: RecordData[], queryClient: QueryClient) => {
-  data.forEach((r) => {
-    queryClient.setQueryData(["records", r.id], r)
-  })
-}
-
-const setArtistsData = (newData: RecordData[], queryClient: QueryClient) => {
-  const existingArtistsDict = keyBy<ArtistData>(
-    queryClient.getQueryData<ArtistData[]>(["artists"]) || [],
-    "id"
-  )
-  const newArtistsDict = keyBy<ArtistData>(
-    newData.map((r) => r.artist),
-    "id"
-  )
-  const allArtistsDict = { ...existingArtistsDict, ...newArtistsDict }
-
-  queryClient.setQueryData(["artists"], Object.values(allArtistsDict))
-
-  Object.values(newArtistsDict).forEach((a) => {
-    const existingData = queryClient.getQueryData(["artists", a.id])
-    if (!existingData) {
-      queryClient.setQueryData(["artists", a.id], a)
-    }
-  })
-  // }
 }

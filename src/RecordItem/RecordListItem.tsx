@@ -9,20 +9,63 @@ import { ContentEditableField } from "./ContentEditableField"
 import { UseArtistMutationReturnType, UseRecordMutationReturnType } from "../hooks/mutations"
 import { useMutation } from "react-query"
 import { useTraceableState } from "../hooks/traceable"
+import RecordFilterContext from "../RecordFilterContext"
+import isEmpty from "lodash.isempty"
 
-export const RecordListItem = ({ release }: { release: RecordReleaseData }) => {
+export const RecordListItem = React.memo(({ release }: { release: RecordReleaseData }) => {
+  const { search, searchFields } = React.useContext(RecordFilterContext)
+
+  const [show, setShow] = React.useState(true)
+
   const { data: record } = useRecordQuery(release.record_id)
   const { data: artist } = useArtistQuery(release.artist_id)
 
+  React.useEffect(() => {
+    if (!record || !artist) {
+      setShow(false)
+      return
+    }
+
+    if (!search) {
+      setShow(true)
+      return
+    }
+
+    if (isEmpty(searchFields) || searchFields.includes("artist")) {
+      if (artist.name.toLowerCase().includes(search.toLowerCase())) {
+        setShow(true)
+        return
+      }
+    }
+
+    if (isEmpty(searchFields) || searchFields.includes("album")) {
+      if (record.album_title.toLowerCase().includes(search.toLowerCase())) {
+        setShow(true)
+        return
+      }
+    }
+
+    if (isEmpty(searchFields) || searchFields.includes("condition")) {
+      if (record.condition.toLowerCase().includes(search.toLowerCase())) {
+        setShow(true)
+        return
+      }
+    }
+
+    if (isEmpty(searchFields) || searchFields.includes("year")) {
+      if (record.year.toString().includes(search.toLowerCase())) {
+        setShow(true)
+        return
+      }
+    }
+
+    setShow(false)
+  }, [search, searchFields, record, artist])
+
   return (
     <>
-      {record && artist && (
-        <RecordCard
-          albumName={record.album_title}
-          artistName={artist.name}
-          key={`${record.album_title}-${artist.name}`}
-          css="position: relative;"
-        >
+      {record && artist && show && (
+        <RecordCard albumName={record.album_title} artistName={artist.name} css="position: relative;">
           <CardHeader justify="between" css="position: relative;" background="#000000B3" pad="small">
             <Box>
               <Text size="small" weight={600} color="white">
@@ -50,7 +93,7 @@ export const RecordListItem = ({ release }: { release: RecordReleaseData }) => {
       )}
     </>
   )
-}
+})
 
 type RecordCardProps = PropsOf<typeof Card> & {
   artistName?: string

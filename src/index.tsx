@@ -6,11 +6,14 @@ import App from "./App"
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration"
 import reportWebVitals from "./reportWebVitals"
 import { QueryProvider } from "./QueryProvider"
+import * as RecordFilterContext from "./RecordFilterContext"
 
 ReactDOM.render(
   <React.StrictMode>
     <QueryProvider>
-      <App />
+      <RecordFilterContext.Provider>
+        <App />
+      </RecordFilterContext.Provider>
     </QueryProvider>
   </React.StrictMode>,
   document.getElementById("root")

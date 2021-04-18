@@ -74,6 +74,8 @@ export const ContentEditableField = (props: ContentEditableProps) => {
             ref={editButtonRef}
             visible={showEdit}
             title="Edit Album Title"
+            hoverIndicator
+            background="rgba(101, 101, 101, 0.5)"
             onClick={() => {
               props.setDisabled(false)
               setShowEdit(false)

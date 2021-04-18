@@ -43,7 +43,7 @@ export const RecordListItem = ({ release }: { release: RecordReleaseData }) => {
               </Text>
             </Box>
             <Box css="position: absolute; right: 10px; bottom: 10px;">
-              <Condition condition={record.condition} />
+              <Condition record={record} />
             </Box>
           </CardFooter>
         </RecordCard>

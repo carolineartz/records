@@ -9,7 +9,7 @@ type EditButtonProps = Omit<PropsOf<typeof Button>, "icon"> & {
   color?: string
 }
 
-const EditButtonComponent = React.forwardRef<typeof Button, EditButtonProps>(
+export const EditButton = React.forwardRef<typeof Button, EditButtonProps>(
   ({ background = "transparent", visible, color = "white", ...props }, ref) => {
     return (
       <Box
@@ -47,5 +47,3 @@ const EditButtonComponent = React.forwardRef<typeof Button, EditButtonProps>(
     )
   }
 )
-
-export const EditButton = EditButtonComponent

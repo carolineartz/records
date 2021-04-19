@@ -12,6 +12,7 @@ type ContentEditableProps = {
   setValue: (val: string) => void
   disabled: boolean
   setDisabled: (disable: boolean) => void
+  title?: string
 }
 
 export const ContentEditableField = (props: ContentEditableProps) => {
@@ -23,7 +24,7 @@ export const ContentEditableField = (props: ContentEditableProps) => {
   const handleChange = useRefCallback(
     (evt) => {
       const val = evt.target.value
-      props.setValue(val || initialValue) // content ediable els don't handle empty well.
+      props.setValue(val || "")
     },
     [initialValue]
   )
@@ -32,12 +33,18 @@ export const ContentEditableField = (props: ContentEditableProps) => {
     if (props.submitOnBlur) {
       props.setDisabled(true)
       setShowEdit(false)
-      props.onSubmit?.(props.value)
+      if (!props.value) {
+        props.setValue(initialValue) // Don't allow empty titles
+      } else {
+        props.onSubmit?.(props.value)
+      }
     }
   }, [props.value, props.submitOnBlur, props.editButton, props.setDisabled, props.onSubmit])
 
   React.useEffect(() => {
     if (!props.disabled) {
+      // Hack to make .focus work for contenteditable
+      // https://stackoverflow.com/a/37162116/7945147
       setTimeout(() => {
         editableRef.current?.focus()
       }, 0)
@@ -73,7 +80,7 @@ export const ContentEditableField = (props: ContentEditableProps) => {
           <EditButton
             ref={editButtonRef}
             visible={showEdit}
-            title="Edit Album Title"
+            title={props.title}
             hoverIndicator
             background="rgba(101, 101, 101, 0.5)"
             onClick={() => {

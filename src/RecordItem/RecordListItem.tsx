@@ -3,7 +3,7 @@ import "styled-components/macro"
 import styled from "styled-components"
 import { Card, CardBody, CardFooter, Text, CardHeader, Box } from "grommet"
 import { useArtistQuery, useRecordQuery } from "../hooks/queries"
-import { Condition } from "./FieldCondition"
+import { ConditionSelect } from "./ConditionSelect"
 import { useRecordImage } from "../hooks/useRecordImage"
 import { ContentEditableField } from "./ContentEditableField"
 import { UseArtistMutationReturnType, UseRecordMutationReturnType } from "../hooks/mutations"
@@ -14,79 +14,74 @@ import isEmpty from "lodash.isempty"
 
 export const RecordListItem = React.memo(({ release }: { release: RecordReleaseData }) => {
   const { search, searchFields, searchConditions } = React.useContext(RecordFilterContext)
-
-  const [show, setShow] = React.useState(true)
+  const [isVisible, setIsVisible] = React.useState(true)
 
   const { data: record } = useRecordQuery(release.record_id)
   const { data: artist } = useArtistQuery(release.artist_id)
 
   React.useEffect(() => {
     if (!record || !artist) {
-      setShow(false)
+      setIsVisible(false)
       return
     }
 
     if (!isEmpty(searchConditions)) {
       if (!searchConditions.includes(record.condition)) {
-        setShow(false)
+        setIsVisible(false)
         return
       }
     }
 
     if (!search) {
-      setShow(true)
+      setIsVisible(true)
       return
     }
 
     if (isEmpty(searchFields) || searchFields.includes("artist")) {
       if (artist.name.toLowerCase().includes(search.toLowerCase())) {
-        setShow(true)
+        setIsVisible(true)
         return
       }
     }
 
     if (isEmpty(searchFields) || searchFields.includes("album")) {
       if (record.album_title.toLowerCase().includes(search.toLowerCase())) {
-        setShow(true)
+        setIsVisible(true)
         return
       }
     }
 
     if (isEmpty(searchFields) || searchFields.includes("year")) {
       if (record.year.toString().includes(search.toLowerCase())) {
-        setShow(true)
+        setIsVisible(true)
         return
       }
     }
 
-    setShow(false)
+    setIsVisible(false)
   }, [search, searchFields, record, artist, searchConditions])
 
   return (
     <>
-      {record && artist && show && (
+      {record && artist && isVisible && (
         <RecordCard albumName={record.album_title} artistName={artist.name} css="position: relative;">
           <CardHeader justify="between" css="position: relative;" background="#000000B3" pad="small">
-            <Box>
-              <Text size="small" weight={600} color="white">
-                <AlbumTitleField record={record} />
-              </Text>
-            </Box>
+            <Text size="small" weight={600} color="white">
+              <RecordTitleField record={record} />
+            </Text>
           </CardHeader>
-          <CardBody>
-            <Box direction="row" align="center" justify="around"></Box>
-          </CardBody>
+          <CardBody />
           <CardFooter background="#000000B3" css="position: relative;">
             <Box pad="xsmall">
               <Text size="xsmall" color="white">
-                <AlbumYearField record={record} />
+                <RecordYearField record={record} />
               </Text>
               <Text size="small" weight={600} color="white">
                 <ArtistNameField artist={artist} />
               </Text>
             </Box>
             <Box css="position: absolute; right: 10px; bottom: 10px;">
-              <Condition record={record} />
+              <ConditionSelect record={record} />
             </Box>
           </CardFooter>
         </RecordCard>
@@ -96,8 +91,8 @@ export const RecordListItem = React.memo(({ release }: { release: RecordReleaseD
 })
 
 type RecordCardProps = PropsOf<typeof Card> & {
-  artistName?: string
-  albumName?: string
+  artistName: string
+  albumName: string
   children: React.ReactNode
 }
 
@@ -114,15 +109,18 @@ const ImageCard = styled(Card)<ImageCardProps>`
   background-size: cover;
 `
 
-// Edit Album Attribute Fields
+/*
+  Fields for editing attributes
+*/
 
-const AlbumTitleField = ({ record }: { record: RecordData }) => {
+const RecordTitleField = ({ record }: { record: RecordData }) => {
   const [disabled, setDisabled] = React.useState(true)
   const [value, setValue] = React.useState(record.album_title)
   const updateTitleMutation: UseRecordMutationReturnType = useMutation("updateRecord")
 
   return (
     <ContentEditableField
+      title="Edit record title"
       editButton
       submitOnBlur
       disabled={disabled}
@@ -139,7 +137,7 @@ const AlbumTitleField = ({ record }: { record: RecordData }) => {
   )
 }
 
-const AlbumYearField = ({ record }: { record: RecordData }) => {
+const RecordYearField = ({ record }: { record: RecordData }) => {
   const [disabled, setDisabled] = React.useState(true)
   const [value, prevValue, setValue] = useTraceableState(record.year)
   const updateYearMutation: UseRecordMutationReturnType = useMutation("updateRecord")
@@ -157,6 +155,7 @@ const AlbumYearField = ({ record }: { record: RecordData }) => {
 
   return (
     <ContentEditableField
+      title="Edit record year"
       editButton
       submitOnBlur
       disabled={disabled}
@@ -180,6 +179,7 @@ const ArtistNameField = ({ artist }: { artist: ArtistData }) => {
 
   return (
     <ContentEditableField
+      title="Edit artist name"
       editButton
       submitOnBlur
       disabled={disabled}

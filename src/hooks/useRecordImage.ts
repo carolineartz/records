@@ -4,27 +4,23 @@ import { createStorageSerializer } from "../helpers/persistStorageHelper"
 const AlbumArtSourceStore = createStorageSerializer<Record<string, string>>("my-records_art")
 
 type UseRecordImageParams = {
-  artistName?: string
-  albumName?: string
+  artistName: string
+  albumName: string
 }
 
 export const useRecordImage = ({ artistName, albumName }: UseRecordImageParams) => {
   const key = React.useMemo(() => `${artistName}-${albumName}`, [albumName, artistName])
-
   const [imageUrl, setImageUrl] = React.useState<null | string>(null)
 
   React.useEffect(() => {
     const getImage = async () => {
-      if (!artistName || !albumName) return
-
       try {
-        let storedDataMap = (await AlbumArtSourceStore.load()) || {}
+        const storedDataMap = (await AlbumArtSourceStore.load()) || {}
 
         if (storedDataMap[key]) {
           setImageUrl(storedDataMap[key])
         } else {
-          console.log("have to make request...")
-          let url: string | Error = await require("album-art")(artistName, { size: "medium" })
+          let url: string | Error | undefined = await require("album-art")(artistName, { size: "medium" })
 
           if (!url || typeof url !== "string") {
             url = "/default-record.jpg"

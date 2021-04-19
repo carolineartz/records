@@ -83,7 +83,7 @@ export const useReleasesQuery = (): [
     keepPreviousData: true,
   })
 
-  const getNextPage = async () => {
+  const getNextPage = React.useCallback(async () => {
     const storedResponses = await ApiResponseStore.load()
     const nextPage = storedResponses?.[page]?.nextPage
 
@@ -98,7 +98,7 @@ export const useReleasesQuery = (): [
       setHasMore(false)
       console.log("NO MORE DATA")
     }
-  }
+  }, [page, query])
 
   return [query, { hasMore, getNextPage, isLoading: loading || query.isLoading }]
 }

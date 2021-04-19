@@ -4,16 +4,10 @@ import { Text, Box, Collapsible, Select, ThemeContext } from "grommet"
 import { EditButton } from "./EditButton"
 import { useMutation } from "react-query"
 import { UseRecordMutationReturnType } from "../hooks/mutations"
+import { CONDITION_COLOR_MAP } from "./../constants"
+import { stringToRecordCondition, recordConditionToString } from "../helpers/util"
 
-const CONDITION_COLOR_MAP: Record<RecordCondition, string> = {
-  mint: "#9ef0d6",
-  very_good: "#81dbfc",
-  good: "#5b80fc",
-  fair: "#ffca58",
-  poor: "#ff8a58",
-}
-
-export const Condition = ({ record }: { record: RecordData }) => {
+export const ConditionSelect = ({ record }: { record: RecordData }) => {
   const [show, setShow] = React.useState(false)
   const [hide, setHide] = React.useState(false)
   const [showSelect, setShowSelect] = React.useState(false)
@@ -54,7 +48,7 @@ export const Condition = ({ record }: { record: RecordData }) => {
       round="large"
     >
       <Text size="10px" css="line-height: 1.1" color="black" weight={600} truncate>
-        {record.condition.replaceAll("_", " ").toUpperCase()}
+        {recordConditionToString(record.condition, { upcase: true })}
       </Text>
 
       <EditButton
@@ -70,10 +64,9 @@ export const Condition = ({ record }: { record: RecordData }) => {
   )
 
   const handleChangeCondition = (conditionString: string) => {
-    const conditionFromString = conditionString.replaceAll(" ", "_").toLowerCase() as RecordCondition
     updateConditionMutation.mutate({
       ...record,
-      condition: conditionFromString,
+      condition: stringToRecordCondition(conditionString)!,
     })
     setShowSelect(false)
   }
@@ -88,7 +81,7 @@ export const Condition = ({ record }: { record: RecordData }) => {
   }, [showSelect])
 
   const conditionSelect = (
-    <ConditionSelect
+    <CustomSelect
       placeholder="Select"
       alignSelf="end"
       css={"text-align: right;"}
@@ -96,10 +89,10 @@ export const Condition = ({ record }: { record: RecordData }) => {
       plain
       icon={false}
       size="small"
-      value={record.condition.replaceAll("_", " ").toUpperCase()}
+      value={recordConditionToString(record.condition)}
       onClose={() => setShowSelect(false)}
       closeOnChange
-      options={Object.keys(CONDITION_COLOR_MAP).map((c) => c.replaceAll("_", " ").toUpperCase())}
+      options={Object.keys(CONDITION_COLOR_MAP).map((c) => recordConditionToString(c as RecordCondition))}
       onChange={({ option }) => handleChangeCondition(option)}
     />
   )
@@ -117,11 +110,36 @@ export const Condition = ({ record }: { record: RecordData }) => {
   )
 }
 
-const ConditionSelect = (props: PropsOf<typeof Select>) => {
+const CustomSelect = (props: PropsOf<typeof Select>) => {
+  const colorForCondition = React.useMemo(() => {
+    const stringVal = typeof props.value === "string" ? props.value : ""
+    const conditionVal = stringToRecordCondition(stringVal)
+    if (conditionVal) {
+      return CONDITION_COLOR_MAP[conditionVal] || "accent-1"
+    } else {
+      return "accent-1"
+    }
+  }, [props.value])
+
   return (
     <ThemeContext.Extend
       value={{
+        dark: false,
+        global: {
+          colors: {
+            selected: colorForCondition,
+          },
+        },
         select: {
+          container: {
+            extend: (props: any) => {
+              return `
+                span {
+                  color: ${props.theme.global.colors["dark-1"]};
+                }
+              `
+            },
+          },
           options: {
             container: {
               pad: "xsmall",
@@ -130,6 +148,8 @@ const ConditionSelect = (props: PropsOf<typeof Select>) => {
         },
       }}
     >
+      {/* it's not actually display: none -ing the dropdown, just the input which would display the selected value since
+       its being displayed alternatively in the UI */}
       <Select css="display: none" {...props} />
     </ThemeContext.Extend>
   )

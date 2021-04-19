@@ -4,16 +4,9 @@ import { Box, Button, CheckBoxGroup, Keyboard, Text, TextInput } from "grommet"
 import RecordFilterContext, { FilterSearchField, ALL_FILTER_FIELDS } from "./RecordFilterContext"
 import difference from "lodash.difference"
 import initial from "lodash.initial"
+import { CONDITION_SELECT_OPTIONS } from "./constants"
 
-const CONDITION_OPTIONS = [
-  { label: "mint", value: "mint" },
-  { label: "very good", value: "very_good" },
-  { label: "good", value: "good" },
-  { label: "fair", value: "fair" },
-  { label: "poor", value: "poor" },
-]
-
-export const RecordSearch = () => {
+export const RecordListFilters = () => {
   const {
     search,
     setSearch,
@@ -23,46 +16,53 @@ export const RecordSearch = () => {
     setSearchConditions,
   } = React.useContext(RecordFilterContext)
 
-  const suggestions = React.useMemo(() => {
+  // what shows up in the dropdown when focused in the search bar to limit matching search text on
+  // a subset of the release (record/artist) field values.
+  const filterFieldSuggestions = React.useMemo(() => {
     const possibleSuggestions = difference(ALL_FILTER_FIELDS, searchFields)
     return possibleSuggestions.filter((f) => f.toLowerCase().includes(search?.toLowerCase() || ""))
   }, [search, searchFields])
 
-  const handleRemoveTag = (tag: FilterSearchField) => {
+  const handleRemoveFilterTag = (tag: FilterSearchField) => {
     setSearchFields(searchFields.filter((t) => t !== tag))
   }
 
-  const handleAddTag = (tag: FilterSearchField) => {
+  const handleAddFilterTag = (tag: FilterSearchField) => {
     setSearchFields([...searchFields, tag])
     setSearch("")
   }
 
   const handleClickBackspace = () => {
+    // when backspacing without text in the search field, delete the last filter tag added (if applicable)
     if (search?.length === 0) {
       setSearchFields(initial([...searchFields]))
     }
   }
 
   return (
-    <Box pad="small">
+    <Box pad="small" width="100%">
       <Keyboard onBackspace={handleClickBackspace}>
         <TagInput
           placeholder="Search records"
-          suggestions={suggestions}
+          suggestions={filterFieldSuggestions}
           tags={searchFields}
-          onRemove={handleRemoveTag}
-          onAdd={handleAddTag}
+          onRemove={handleRemoveFilterTag}
+          onAdd={handleAddFilterTag}
           onChange={(evt) => setSearch(evt.target.value)}
         />
       </Keyboard>
       <Box pad={{ left: "medium", top: "medium" }}>
+        <Text size="medium" weight={600} margin={{ bottom: "small" }}>
+          Filter by Condition
+        </Text>
         <CheckBoxGroup
           direction="row"
           labelKey="label"
           valueKey="value"
-          options={CONDITION_OPTIONS}
+          options={CONDITION_SELECT_OPTIONS}
           value={searchConditions}
           onChange={(event) => {
+            // TODO: take out grommet PR to fix CheckBoxGroup onChange prop's typing
             setSearchConditions((event?.value as unknown) as RecordCondition[])
           }}
         />
@@ -121,7 +121,7 @@ const TagInput = ({ tags = [], onAdd, onChange, onRemove, ...props }: TagInputPr
   }
 
   const onEnter = () => {
-    if (currentTag.length) {
+    if (currentTag.length && ALL_FILTER_FIELDS.includes(currentTag as FilterSearchField)) {
       onAddTag(currentTag as FilterSearchField)
       setCurrentTag("")
     }

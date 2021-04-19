@@ -1,16 +1,22 @@
 import { Box, Grommet } from "grommet"
 import { RecordList } from "./RecordList"
-import { RecordSearch } from "./RecordSearch"
+import { RecordListFilters } from "./RecordListFilters"
 import { GlobalStyles } from "./globalStyles"
 import { theme } from "./theme"
+import { ReactComponent as Logo } from "./logo.svg"
 
 const App = () => {
   return (
     <Grommet theme={theme} full>
       <GlobalStyles />
       <Box width={{ max: "1080px" }} margin="auto" pad={{ top: "large" }}>
-        <RecordSearch />
-        <Box fill pad="medium" direction="column">
+        <Box direction="row" align="center">
+          <Box pad={{ left: "medium" }}>
+            <Logo height="50px" />
+          </Box>
+          <RecordListFilters />
+        </Box>
+        <Box fill pad={{ top: "large", bottom: "medium", horizontal: "medium" }} direction="column">
           <RecordList />
         </Box>
       </Box>

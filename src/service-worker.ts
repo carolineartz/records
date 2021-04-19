@@ -27,7 +27,6 @@ precacheAndRoute(self.__WB_MANIFEST)
 
 self.addEventListener("fetch", function (event) {
   if (event.request.url.includes("scdn")) {
-    console.log("MATCHES IMAGE")
     event.respondWith(
       caches.open("images-album-art").then(function (cache) {
         return cache.match(event.request).then(function (response) {
@@ -41,8 +40,6 @@ self.addEventListener("fetch", function (event) {
         })
       })
     )
-  } else {
-    console.log("DOES NOT MATCH IMAGE")
   }
 })
 
@@ -78,7 +75,6 @@ registerRoute(
 
 registerRoute(
   (args) => {
-    console.log("URL", args.url)
     return args.url.pathname.includes("image")
   },
   new CacheFirst({

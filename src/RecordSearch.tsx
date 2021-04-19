@@ -1,12 +1,27 @@
 import React from "react"
 import { FormClose } from "grommet-icons"
-import { Box, Button, Keyboard, Text, TextInput } from "grommet"
+import { Box, Button, CheckBoxGroup, Keyboard, Text, TextInput } from "grommet"
 import RecordFilterContext, { FilterSearchField, ALL_FILTER_FIELDS } from "./RecordFilterContext"
 import difference from "lodash.difference"
 import { initial } from "lodash"
 
+const CONDITION_OPTIONS = [
+  { label: "mint", value: "mint" },
+  { label: "very good", value: "very_good" },
+  { label: "good", value: "good" },
+  { label: "fair", value: "fair" },
+  { label: "poor", value: "poor" },
+]
+
 export const RecordSearch = () => {
-  const { search, setSearch, searchFields, setSearchFields } = React.useContext(RecordFilterContext)
+  const {
+    search,
+    setSearch,
+    searchFields,
+    setSearchFields,
+    searchConditions,
+    setSearchConditions,
+  } = React.useContext(RecordFilterContext)
 
   const suggestions = React.useMemo(() => {
     const possibleSuggestions = difference(ALL_FILTER_FIELDS, searchFields)
@@ -40,6 +55,18 @@ export const RecordSearch = () => {
           onChange={(evt) => setSearch(evt.target.value)}
         />
       </Keyboard>
+      <Box pad={{ left: "medium", top: "medium" }}>
+        <CheckBoxGroup
+          direction="row"
+          labelKey="label"
+          valueKey="value"
+          options={CONDITION_OPTIONS}
+          value={searchConditions}
+          onChange={(event) => {
+            setSearchConditions((event?.value as unknown) as RecordCondition[])
+          }}
+        />
+      </Box>
     </Box>
   )
 }

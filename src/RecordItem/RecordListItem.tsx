@@ -13,7 +13,7 @@ import RecordFilterContext from "../RecordFilterContext"
 import isEmpty from "lodash.isempty"
 
 export const RecordListItem = React.memo(({ release }: { release: RecordReleaseData }) => {
-  const { search, searchFields } = React.useContext(RecordFilterContext)
+  const { search, searchFields, searchConditions } = React.useContext(RecordFilterContext)
 
   const [show, setShow] = React.useState(true)
 
@@ -24,6 +24,13 @@ export const RecordListItem = React.memo(({ release }: { release: RecordReleaseD
     if (!record || !artist) {
       setShow(false)
       return
+    }
+
+    if (!isEmpty(searchConditions)) {
+      if (!searchConditions.includes(record.condition)) {
+        setShow(false)
+        return
+      }
     }
 
     if (!search) {
@@ -45,13 +52,6 @@ export const RecordListItem = React.memo(({ release }: { release: RecordReleaseD
       }
     }
 
-    if (isEmpty(searchFields) || searchFields.includes("condition")) {
-      if (record.condition.toLowerCase().includes(search.toLowerCase())) {
-        setShow(true)
-        return
-      }
-    }
-
     if (isEmpty(searchFields) || searchFields.includes("year")) {
       if (record.year.toString().includes(search.toLowerCase())) {
         setShow(true)
@@ -60,7 +60,7 @@ export const RecordListItem = React.memo(({ release }: { release: RecordReleaseD
     }
 
     setShow(false)
-  }, [search, searchFields, record, artist])
+  }, [search, searchFields, record, artist, searchConditions])
 
   return (
     <>

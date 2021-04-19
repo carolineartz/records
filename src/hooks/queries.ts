@@ -13,12 +13,14 @@ const ApiResponseStore = createStorageSerializer<
 
 export const useReleasesQuery = (): [
   UseQueryResult<RecordReleaseData[], Error>,
-  { getNextPage: () => Promise<void> }
+  { getNextPage: () => Promise<void>; hasMore: boolean }
 ] => {
   const queryClient = useQueryClient()
   const [page, setPage] = React.useState(INITIAL_API_ENDPOINT)
+  const [hasMore, setHasMore] = React.useState(true)
   const [nextPage, setNextPage] = React.useState<null | string>(null)
   const queryKey: QueryKey = React.useMemo(() => ["record-releases", { page }], [page])
+  console.log(nextPage)
 
   const fetchRecordsReleasesFn = React.useCallback(
     async (page = INITIAL_API_ENDPOINT) => {
@@ -26,6 +28,7 @@ export const useReleasesQuery = (): [
       let storedResponse: (RecordData & { artist: ArtistData })[]
       if (storedResponses?.[page]) {
         storedResponse = storedResponses[page].results
+        setNextPage(storedResponses[page].nextPage || null)
       } else {
         let updatedResponse = { ...storedResponses } || {}
         const remoteResponse = await axios.get<
@@ -84,15 +87,20 @@ export const useReleasesQuery = (): [
     keepPreviousData: true,
   })
 
-  const getNextPage = React.useCallback(async () => {
-    if (nextPage) {
-      setPage(nextPage)
+  const getNextPage = async () => {
+    const storedResponses = await ApiResponseStore.load()
+    const np = storedResponses?.[page]?.nextPage
+    if (np) {
+      setPage(np)
+      setHasMore(true)
+      query.refetch()
     } else {
+      setHasMore(false)
       console.log("NO MORE DATA")
     }
-  }, [nextPage])
+  }
 
-  return [query, { getNextPage }]
+  return [query, { hasMore, getNextPage }]
 }
 
 export const useRecordQuery = (id: string | number, opts = {}) => {

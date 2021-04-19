@@ -13,14 +13,13 @@ const ApiResponseStore = createStorageSerializer<
 
 export const useReleasesQuery = (): [
   UseQueryResult<RecordReleaseData[], Error>,
-  { getNextPage: () => Promise<void>; hasMore: boolean }
+  { getNextPage: () => Promise<void>; hasMore: boolean; isLoading: boolean }
 ] => {
   const queryClient = useQueryClient()
   const [page, setPage] = React.useState(INITIAL_API_ENDPOINT)
   const [hasMore, setHasMore] = React.useState(true)
-  const [nextPage, setNextPage] = React.useState<null | string>(null)
   const queryKey: QueryKey = React.useMemo(() => ["record-releases", { page }], [page])
-  console.log(nextPage)
+  const [loading, setLoading] = React.useState(false)
 
   const fetchRecordsReleasesFn = React.useCallback(
     async (page = INITIAL_API_ENDPOINT) => {
@@ -28,14 +27,11 @@ export const useReleasesQuery = (): [
       let storedResponse: (RecordData & { artist: ArtistData })[]
       if (storedResponses?.[page]) {
         storedResponse = storedResponses[page].results
-        setNextPage(storedResponses[page].nextPage || null)
       } else {
         let updatedResponse = { ...storedResponses } || {}
         const remoteResponse = await axios.get<
           PaginatedResponseData<Omit<RecordData, "id"> & { artist: ArtistData }>
         >(page)
-
-        setNextPage(remoteResponse.data.nextPage || null)
 
         const responseData = {
           ...remoteResponse.data,
@@ -50,7 +46,7 @@ export const useReleasesQuery = (): [
         await ApiResponseStore.store(updatedResponse)
       }
 
-      // TRY TO CONSTRUCT THE COLLECTION FROM THE STORE BEFORE MAKING ASYNC CALL
+      // Try to construct from cache before making async call
       const existingData = queryClient.getQueryData<RecordReleaseData[]>(queryKey)
 
       if (existingData) {
@@ -89,18 +85,22 @@ export const useReleasesQuery = (): [
 
   const getNextPage = async () => {
     const storedResponses = await ApiResponseStore.load()
-    const np = storedResponses?.[page]?.nextPage
-    if (np) {
-      setPage(np)
+    const nextPage = storedResponses?.[page]?.nextPage
+
+    if (nextPage) {
+      setLoading(true)
+      setPage(nextPage)
       setHasMore(true)
-      query.refetch()
+      await query.refetch()
+      setLoading(false)
     } else {
+      setLoading(false)
       setHasMore(false)
       console.log("NO MORE DATA")
     }
   }
 
-  return [query, { hasMore, getNextPage }]
+  return [query, { hasMore, getNextPage, isLoading: loading || query.isLoading }]
 }
 
 export const useRecordQuery = (id: string | number, opts = {}) => {

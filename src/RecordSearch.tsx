@@ -3,7 +3,7 @@ import { FormClose } from "grommet-icons"
 import { Box, Button, CheckBoxGroup, Keyboard, Text, TextInput } from "grommet"
 import RecordFilterContext, { FilterSearchField, ALL_FILTER_FIELDS } from "./RecordFilterContext"
 import difference from "lodash.difference"
-import { initial } from "lodash"
+import initial from "lodash.initial"
 
 const CONDITION_OPTIONS = [
   { label: "mint", value: "mint" },

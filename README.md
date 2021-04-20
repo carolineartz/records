@@ -2,6 +2,8 @@
 
 [see it live](https://eager-liskov-b6456d.netlify.app/)
 
+![preview](./preview.png)
+
 This is a React app that pulls record album data. Records are presented to the user and various attributes on each item may be updated. The app leverages various other technologies and libraries:
 
 - [TypeScript](https://www.typescriptlang.org/)

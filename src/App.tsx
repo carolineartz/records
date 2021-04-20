@@ -10,12 +10,7 @@ const App = () => {
     <Grommet theme={theme} full>
       <GlobalStyles />
       <Box width={{ max: "1080px" }} margin="auto" pad={{ top: "large" }}>
-        <Box direction="row" align="center">
-          <Box pad={{ left: "medium" }}>
-            <Logo height="50px" />
-          </Box>
-          <RecordListFilters />
-        </Box>
+        <RecordListFilters inputIcon={<Logo height="50px" />} />
         <Box fill pad={{ top: "large", bottom: "medium", horizontal: "medium" }} direction="column">
           <RecordList />
         </Box>

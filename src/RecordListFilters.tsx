@@ -1,4 +1,5 @@
 import React from "react"
+import "styled-components/macro"
 import { FormClose } from "grommet-icons"
 import { Box, Button, CheckBoxGroup, Keyboard, Text, TextInput } from "grommet"
 import RecordFilterContext, { FilterSearchField, ALL_FILTER_FIELDS } from "./RecordFilterContext"
@@ -6,7 +7,7 @@ import difference from "lodash.difference"
 import initial from "lodash.initial"
 import { CONDITION_SELECT_OPTIONS } from "./constants"
 
-export const RecordListFilters = () => {
+export const RecordListFilters = ({ inputIcon }: { inputIcon?: JSX.Element }) => {
   const {
     search,
     setSearch,
@@ -42,21 +43,28 @@ export const RecordListFilters = () => {
   return (
     <Box pad="small" width="100%">
       <Keyboard onBackspace={handleClickBackspace}>
-        <TagInput
-          placeholder="Search records"
-          suggestions={filterFieldSuggestions}
-          tags={searchFields}
-          onRemove={handleRemoveFilterTag}
-          onAdd={handleAddFilterTag}
-          onChange={(evt) => setSearch(evt.target.value)}
-        />
+        <Box direction="row" width="100%">
+          {inputIcon}
+          <TagInput
+            css="width: 100%"
+            placeholder="Search records"
+            suggestions={filterFieldSuggestions}
+            tags={searchFields}
+            onRemove={handleRemoveFilterTag}
+            onAdd={handleAddFilterTag}
+            onChange={(evt) => setSearch(evt.target.value)}
+          />
+        </Box>
       </Keyboard>
-      <Box pad={{ left: "medium", top: "medium" }}>
+      <Box pad={{ left: "small", top: "medium" }}>
         <Text size="medium" weight={600} margin={{ bottom: "small" }}>
           Filter by Condition
         </Text>
         <CheckBoxGroup
           direction="row"
+          wrap // ideally we won't wrap but in case the screen is extremely small, this will ensure they are all accessible.
+          className="condition-filter-checkboxes" // for a quick fix for checkboxes not fitting on a single row on very small device viewports
+          gap="medium"
           labelKey="label"
           valueKey="value"
           options={CONDITION_SELECT_OPTIONS}
@@ -136,9 +144,16 @@ const TagInput = ({ tags = [], onAdd, onChange, onRemove, ...props }: TagInputPr
 
   return (
     <Keyboard onEnter={onEnter}>
-      <Box direction="row" align="center" pad={{ horizontal: "xsmall" }} ref={boxRef as any} wrap>
+      <Box
+        direction="row"
+        width="100%"
+        align="center"
+        pad={{ horizontal: "xsmall" }}
+        ref={boxRef as any}
+        wrap
+      >
         {tags.length > 0 && renderValue()}
-        <Box flex style={{ minWidth: "120px" }}>
+        <Box style={{ width: "100%" }}>
           <TextInput
             type="search"
             plain

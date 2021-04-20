@@ -1,46 +1,26 @@
-# Getting Started with Create React App
+# Records App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+[see it live](https://eager-liskov-b6456d.netlify.app/)
 
-## Available Scripts
+This is a React app that pulls record album data. Records are presented to the user and various attributes on each item may be updated. The app leverages various other technologies and libraries:
 
-In the project directory, you can run:
+- [TypeScript](https://www.typescriptlang.org/)
+- [Grommet React UI Framework](https://v2.grommet.io/)
+- [React Query](https://react-query.tanstack.com/) for fetching, caching and syncing data
+- [PWA](https://web.dev/progressive-web-apps/)/ServiceWorker based caching
+- [contentEditable](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/contenteditable) elements vs inputs
 
-### `yarn start`
+The API data for this app is hosted via github gists and thus mutations are inherently not supported. Functionality available through the React Query api with a localStorage-based "backend" is used to simulate persisted updates to data once has been fetched for the first time. Paginated data is fetched lazily once scolling towards the end of the currently displayed records.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+The original data includes an ID field for the Artist but not for the Record resource. Since functionality is built in for updating as described above, maintaining a unique identifier based on any combination of data is not reliable. Since subsequent fetches for the api are served from a local query cache, unique identifieres are generated and the response data is transformed to incude these ids when returned from the remote source.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+To make UI more interesting, art is displayed for each item. Since the data values that represent real artists but fake data for titles, only the artist sourced to fetch album art via the [album-art](https://www.npmjs.com/package/album-art) package that uses the Spotify api under-the-hood. This means that any two records with the same artist will have the same art (and updating the artist on one will change the image on all items with that artist).
 
-### `yarn test`
+## Development
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Pull the repo and run `yarn` to install the dependencies. Run `yarn start` to run the local dev server and open up a browser to view the app. In dev mode you will find the React Query dev tools by clicking the RQ icon on the left bottom corner of the screen.
 
-### `yarn build`
+## TODO:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- (integration) specs
+-
